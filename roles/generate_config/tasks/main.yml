@@ -1,59 +1,61 @@
 ---
 - name: Read config JSON
-  slurp:
+  ansible.builtin.slurp:
     src: "{{ vmess_config_file_path }}"
   register: users_json_raw
 
 - name: Decode JSON
-  set_fact:
+  ansible.builtin.set_fact:
     raw_json: "{{ users_json_raw.content | b64decode | from_json }}"
 
 - name: Extract clients
-  set_fact:
+  ansible.builtin.set_fact:
     users: "{{ raw_json.inbounds[0].settings.clients }}"
 
-- name: Check if user with same email exists
-  set_fact:
-    id: "{{ item.id }}"
-  loop: "{{ users }}"
-  when: item.email == email
+- name: Extract matching user (by email)
+  ansible.builtin.set_fact:
+    matched_user: "{{ users | selectattr('email', 'equalto', email) | list | first }}"
+
+- name: Set ID from matched user
+  ansible.builtin.set_fact:
+    id: "{{ matched_user.id | default('') }}"
 
 - name: Get endpoint from config file
-  set_fact:
-    endpoint: "{{ raw_json.inbounds[0].streamSettings.wsSettings.path }}"
+  ansible.builtin.set_fact:
+    endpoint: "{{ raw_json.inbounds[0].streamSettings.wsSettings.path | default('') }}"
 
 - name: Generate temp client config
-  template:
+  ansible.builtin.template:
     src: config_template.j2
     dest: "/tmp/{{ ansible_host }}_config.json"
-  vars:
-    id: "{{ id }}"
-    endpoint: "{{ endpoint }}"
+    owner: root
+    group: root
+    mode: '0600'
 
 - name: Read temp config
-  slurp:
+  ansible.builtin.slurp:
     src: "/tmp/{{ ansible_host }}_config.json"
   register: rendered_config
 
 - name: Encode config in base64
-  set_fact:
+  ansible.builtin.set_fact:
     encoded_config: "{{ rendered_config.content }}"
 
 - name: Delete temp config
-  file:
+  ansible.builtin.file:
     path: "/tmp/{{ ansible_host }}_config.json"
     state: absent
 
 - name: Setup array for links from all vmess hosts
   run_once: true
   delegate_to: localhost
-  set_fact:
+  ansible.builtin.set_fact:
     all_vmess_links: []
 
 - name: Add links to array from all vmess hosts
   run_once: true
   delegate_to: localhost
-  set_fact:
+  ansible.builtin.set_fact:
     all_vmess_links: "{{ all_vmess_links + [ { 'host': item.key, 'link': 'vmess://' ~ item.value.encoded_config } ] }}"
   loop: "{{ hostvars | dict2items }}"
   when: item.value.encoded_config is defined
@@ -61,11 +63,11 @@
 - name: Generate encoded configs
   run_once: true
   delegate_to: localhost
-  set_fact:
+  ansible.builtin.set_fact:
     vmess_blob: "{{ all_vmess_links | map(attribute='link') | join('\n') }}"
 
 - name: Send vmess links to password push
-  uri:
+  ansible.legacy.uri:
     url: "{{ pwpush_url }}/p.json"
     method: POST
     status_code: [200, 201]
@@ -80,19 +82,17 @@
   register: pwpush_response
   delegate_to: localhost
   run_once: true
-  when: 
-    - pwd_push | default(false)
+  when: pwd_push | default(false)
 
 - name: Show link to password push
-  debug:
+  ansible.builtin.debug:
     msg: "Ссылка на vmess конфиги: {{ pwpush_url }}/p/{{ pwpush_response.json.url_token }}"
   run_once: true
   delegate_to: localhost
-  when: 
-    - pwd_push | default(false)
+  when: pwd_push | default(false)
 
 - name: Show vmess_blob in console (fallback if not sending to password push)
-  debug:
+  ansible.builtin.debug:
     msg: "{{ vmess_blob }}"
   run_once: true
   delegate_to: localhost

@@ -1,26 +1,26 @@
 ---
 - name: Create user
-  user:
+  ansible.builtin.user:
     name: "{{ bootstrap_user }}"
     shell: /bin/bash
     groups: sudo
-    append: yes
-    create_home: yes
+    append: true
+    create_home: true
     state: present
     password: "{{ bootstrap_user_password }}"
 
 - name: Set SSH key for user
-  authorized_key:
+  ansible.posix.authorized_key:
     user: "{{ bootstrap_user }}"
     state: present
     key: "{{ bootstrap_pubkey }}"
 
 - name: Allow passwordless sudo
-  copy:
+  ansible.builtin.copy:
     dest: "/etc/sudoers.d/{{ bootstrap_user }}"
     content: "{{ bootstrap_user }} ALL=(ALL) NOPASSWD:ALL\n"
     mode: '0440'
 
 - name: Set hostname on {{ ansible_hostname }}
-  hostname:
+  ansible.builtin.hostname:
     name: "{{ inventory_hostname }}"

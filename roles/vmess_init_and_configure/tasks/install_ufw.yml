@@ -1,37 +1,41 @@
 ---
 - name: Ensure UFW is installed
-  apt:
+  ansible.builtin.apt:
     name: ufw
     state: present
-    update_cache: yes
+    update_cache: true
 
 - name: Reset UFW to default settings
-  shell: echo "y" | ufw reset
-  ignore_errors: yes
+  ansible.builtin.command: ufw reset
+  args:
+    stdin: "y"
+  register: ufw_reset_result
+  failed_when: false
+  changed_when: "'resetting all rules' in ufw_reset_result.stdout"
 
-- name: Allow incoming SSH (TCP {{ ssh_port }} for all)
-  ufw:
+- name: Allow incoming SSH (TCP) for all — port {{ ssh_port }}
+  community.general.ufw:
     rule: allow
     proto: tcp
     port: "{{ ssh_port }}"
     direction: in
 
 - name: Allow incoming HTTP (TCP 80 for all)
-  ufw:
+  community.general.ufw:
     rule: allow
     proto: tcp
     port: "80"
     direction: in
 
 - name: Allow incoming HTTPS (TCP 443 for all)
-  ufw:
+  community.general.ufw:
     rule: allow
     proto: tcp
     port: "443"
     direction: in
 
 - name: Allow incoming Custom Port (TCP 9100 from specific IP)
-  ufw:
+  community.general.ufw:
     rule: allow
     proto: tcp
     port: "9100"
@@ -42,46 +46,46 @@
     - node_exporter_allowed_src_ip | length > 0
 
 - name: Allow all outgoing TCP traffic
-  ufw:
+  community.general.ufw:
     rule: allow
     proto: tcp
     direction: out
 
 - name: Allow all outgoing UDP traffic
-  ufw:
+  community.general.ufw:
     rule: allow
     proto: udp
     direction: out
 
 - name: Allow outgoing DNS (TCP 53)
-  ufw:
+  community.general.ufw:
     rule: allow
     proto: tcp
     port: "53"
     direction: out
 
 - name: Allow outgoing DNS (UDP 53)
-  ufw:
+  community.general.ufw:
     rule: allow
     proto: udp
     port: "53"
     direction: out
 
 - name: Allow outgoing HTTP (TCP 80)
-  ufw:
+  community.general.ufw:
     rule: allow
     proto: tcp
     port: "80"
     direction: out
 
 - name: Allow outgoing HTTPS (TCP 443)
-  ufw:
+  community.general.ufw:
     rule: allow
     proto: tcp
     port: "443"
     direction: out
 
 - name: Enable UFW
-  ufw:
+  community.general.ufw:
     state: enabled
     policy: deny

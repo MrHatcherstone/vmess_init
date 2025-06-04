@@ -4,9 +4,9 @@
 ssh_port: 22
 # domain name for vmess
 server_name: "subdomain.example.com"
-# email for certbot domain certs 
+# email for certbot domain certs
 certbot_email: "email.example.com"
-# where nginx config for vmwess will be stored 
+# where nginx config for vmwess will be stored
 nginx_conf_path: "/etc/nginx/sites-enabled/{{ server_name }}.conf"
 # where docker-compose file and config for will be store on your vm
 docker_dir: "/dockerContainers/vmess/conf/"

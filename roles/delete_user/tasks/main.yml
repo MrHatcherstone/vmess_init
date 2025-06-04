@@ -1,35 +1,51 @@
 ---
 - name: Read config JSON
-  slurp:
+  ansible.builtin.slurp:
     src: "{{ vmess_config_file_path }}"
   register: users_json_raw
 
 - name: Decode JSON
-  set_fact:
+  ansible.builtin.set_fact:
     raw_json: "{{ users_json_raw.content | b64decode | from_json }}"
 
 - name: Extract clients
-  set_fact:
+  ansible.builtin.set_fact:
     users: "{{ raw_json.inbounds[0].settings.clients }}"
 
 - name: Check if user with same email exists
-  fail:
+  ansible.builtin.fail:
     msg: "No client with email {{ email }} found"
   when: users | selectattr('email', 'equalto', email) | list | length == 0
 
 - name: Delete client with matched email
-  set_fact:
+  ansible.builtin.set_fact:
     updated_users: "{{ users | rejectattr('email', 'equalto', email) | sort(attribute='email') | list }}"
 
 - name: Update JSON
-  set_fact:
-    raw_json: "{{ raw_json | combine({'inbounds': [ raw_json.inbounds[0] | combine({'settings': raw_json.inbounds[0].settings | combine({'clients': updated_users}) }) ]}) }}"
+  ansible.builtin.set_fact:
+    raw_json: >-
+      {{ raw_json
+         | combine({
+             'inbounds': [
+               raw_json.inbounds[0]
+               | combine({
+                   'settings': raw_json.inbounds[0].settings
+                   | combine({
+                       'clients': updated_users
+                   })
+               })
+             ]
+         })
+      }}
 
 - name: Write new JSON
-  copy:
+  ansible.builtin.copy:
     content: "{{ raw_json | to_nice_json }}"
     dest: "{{ vmess_config_file_path }}"
-    backup: yes
+    backup: true
+    owner: root
+    group: root
+    mode: '0644'
 
 - name: Restart docker-compose
   community.docker.docker_compose_v2:

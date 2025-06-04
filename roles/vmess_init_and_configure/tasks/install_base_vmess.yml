@@ -1,6 +1,6 @@
 ---
 - name: Validate server_name
-  ansible.builtin.fail:
+  ansible.builtin.ansible.builtin.fail:
     msg: "The variable 'server_name' must be provided as an argument."
   when: server_name is not defined
 
@@ -13,14 +13,14 @@
     subdomain: "{{ server_name.split('.')[0] }}"
 
 - name: Generate 3 UUIDs
-  set_fact:
+  ansible.builtin.set_fact:
     guid_1: "{{ lookup('pipe', 'uuidgen') }}"
     guid_2: "{{ lookup('pipe', 'uuidgen') }}"
     guid_3: "{{ lookup('pipe', 'uuidgen') }}"
 
 - name: Update APT cache
-  ansible.builtin.apt:
-    update_cache: yes
+  ansible.builtin.ansible.builtin.apt:
+    update_cache: true
 
 - name: Install dependencies
   ansible.builtin.package:
@@ -30,20 +30,29 @@
       - certbot
     state: present
 
-- name: Creates /var/log/nginx/subdomain dir
+- name: Create log directory for nginx subdomain
   ansible.builtin.file:
     path: "/var/log/nginx/{{ subdomain }}"
     state: directory
+    owner: www-data
+    group: www-data
+    mode: '0750'
 
 - name: Creates docker dir
   ansible.builtin.file:
     path: "/dockerContainers/vmess/conf"
     state: directory
+    owner: root
+    group: root
+    mode: '0755'
 
-- name: Creates Logs dir
+- name: Create logs directory for vmess
   ansible.builtin.file:
-    path: "/var/log/vmess"
+    path: /var/log/vmess
     state: directory
+    owner: root
+    group: root
+    mode: '0755'
 
 - name: Remove default nginx conf
   ansible.builtin.file:
@@ -68,8 +77,9 @@
 
 - name: Get cert
   ansible.builtin.command:
-    cmd: certbot certonly --nginx -d {{ server_name }} --non-interactive --agree-to --email {{ certbot_email }}
+    cmd: certbot certonly --nginx -d {{ server_name }} --non-interactive --agree-tos --email {{ certbot_email }}
   register: certbot_result
+  changed_when: "'Certificate not yet due for renewal' not in certbot_result.stdout"
 
 - name: Restart nginx
   ansible.builtin.service:
@@ -100,17 +110,19 @@
     group: root
     mode: '0644'
 
-- name: docker compose up
+- name: Docker compose up
   ansible.builtin.command:
     cmd: docker compose up -d
     chdir: "{{ docker_dir }}"
+  changed_when: true
 
 - name: Restart nginx
   ansible.builtin.service:
     name: nginx
     state: restarted
 
-- name: docker compose restart
+- name: Restart Docker Compose services
   ansible.builtin.command:
     cmd: docker compose restart
     chdir: "{{ docker_dir }}"
+  changed_when: true
