@@ -10,12 +10,21 @@
     grep 'tag_name' | cut -d '"' -f 4
   register: latest_version
   changed_when: false
+  args:
+    executable: /bin/bash
+
+- name: Set node_exporter download URL
+  ansible.builtin.set_fact:
+    node_exporter_url: "{{
+      'https://github.com/prometheus/node_exporter/releases/download/' +
+      latest_version.stdout + '/' +
+      'node_exporter-' + (latest_version.stdout | replace('v', '')) +
+      '.linux-amd64.tar.gz'
+    }}"
 
 - name: Download node_exporter
   ansible.builtin.get_url:
-    url: >
-      https://github.com/prometheus/node_exporter/releases/download/{{ latest_version.stdout }}/
-      node_exporter-{{ latest_version.stdout | replace('v', '') }}.linux-amd64.tar.gz
+    url: "{{ node_exporter_url }}"
     dest: /tmp/node_exporter.tar.gz
     mode: '0644'
     owner: root
