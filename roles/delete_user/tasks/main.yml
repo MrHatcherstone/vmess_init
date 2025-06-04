@@ -14,7 +14,7 @@
 
 - name: Check if user with same email exists
   fail:
-    msg: "Клиент с email {{ email }} не найден"
+    msg: "No client with email {{ email }} found"
   when: users | selectattr('email', 'equalto', email) | list | length == 0
 
 - name: Delete client with matched email
