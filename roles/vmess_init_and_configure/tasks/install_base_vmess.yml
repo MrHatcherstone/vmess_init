@@ -1,6 +1,6 @@
 ---
 - name: Validate server_name
-  ansible.builtin.ansible.builtin.fail:
+  ansible.builtin.fail:
     msg: "The variable 'server_name' must be provided as an argument."
   when: server_name is not defined
 
@@ -19,7 +19,7 @@
     guid_3: "{{ lookup('pipe', 'uuidgen') }}"
 
 - name: Update APT cache
-  ansible.builtin.ansible.builtin.apt:
+  ansible.builtin.apt:
     update_cache: true
 
 - name: Install dependencies
