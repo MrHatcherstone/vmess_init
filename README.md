@@ -252,3 +252,11 @@ If you want to automatically publish the generated config and receive a link usi
 If `pwd_push` is enabled, the playbook will send the generated config to the specified Password Pusher service and return a link for sharing. If `pwd_push` is disabled or set to `false`, the generated client configuration will be displayed directly in the console output.
 
 ---
+
+## License
+
+This project is licensed under the [MIT License](./LICENSE).
+
+You are free to use, modify, and distribute this software for any purpose, including commercial use, provided that the original copyright notice and license text are included in all copies.
+
+See the [LICENSE](./LICENSE) file for full details.
