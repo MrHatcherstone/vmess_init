@@ -1,4 +1,4 @@
-# Ansible user on target vm wich will be created 
+# Ansible user on target vm which will be created 
 bootstrap_user: "ansible"
 # Ansible user password
 bootstrap_user_password: "password"
