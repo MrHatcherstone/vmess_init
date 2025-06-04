@@ -1,8 +1,0 @@
-# Ansible user on target vm wich will be created 
-bootstrap_user: "ansible"
-# Ansible user password
-bootstrap_user_password: "fb3e2c8586ad74ca2d9e3eeeb335f861f8c2ec15ac28a08fac31be1e1ac68b9e33a1d99a2521135857058850d01d0348875360c4edcabd3f988e7b9c1f4584c4"
-# Ansible user SSH-key on ansible host
-bootstrap_ssh_path: "/home/ansible/.ssh/ansible.pub" 
-# Ansible user SSH-pub-key on ansible host
-bootstrap_pubkey: "{{ lookup('file', bootstrap_ssh_path) }}"
