@@ -1,0 +1,6 @@
+---
+- name: Delete user
+  hosts: all
+  become: true
+  roles:
+    - delete_user

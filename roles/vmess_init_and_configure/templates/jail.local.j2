@@ -1,0 +1,6 @@
+[sshd]
+enabled   = true
+maxretry  = 2
+findtime  = 1h
+bantime   = 1y
+ignoreip  = 127.0.0.1/8 {% for ip in fail2ban_ignoreip %} {{ ip }}{% endfor %}

@@ -1,0 +1,8 @@
+
+  - job_name: '{{ ansible_hostname }}'
+    scrape_interval: 1m
+    scheme: https
+    static_configs:
+      - targets: ['{{ server_name }}']
+        labels:
+          vm_type: vpn

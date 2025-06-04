@@ -1,0 +1,42 @@
+{
+    "log": {
+        "loglevel": "error",
+        "access": "/mnt/logs/access.log",
+        "error": "/mnt/logs/error.log"
+    },
+    "inbounds": [
+        {
+            "port": 10000,
+            "listen": "127.0.0.1",
+            "protocol": "vmess",
+            "settings": {
+                "clients": [
+                    {
+                        "id": "{{ guid_1 }}",
+                        "email": "temp_1"
+                    },
+                    {
+                        "id": "{{ guid_2 }}",
+                        "email": "temp_2"
+                    },
+                    {
+                        "id": "{{ guid_3 }}",
+                        "email": "temp_3"
+                    }
+                ]
+            },
+            "streamSettings": {
+                "network": "ws",
+                "wsSettings": {
+                    "path": "/{{ endpoint }}"
+                }
+            }
+        }
+    ],
+    "outbounds": [
+        {
+            "protocol": "freedom",
+            "settings": {}
+        }
+    ]
+}

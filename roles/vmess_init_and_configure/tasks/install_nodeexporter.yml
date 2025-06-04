@@ -1,0 +1,86 @@
+---
+- name: Print the hostname
+  debug:
+    msg: "The hostname is {{ ansible_hostname }}"
+
+- name: Get the latest node_exporter version
+  shell: |
+    curl -s https://api.github.com/repos/prometheus/node_exporter/releases/latest | 
+    grep 'tag_name' | cut -d '"' -f 4
+  register: latest_version
+
+- name: Download node_exporter
+  get_url:
+    url: "https://github.com/prometheus/node_exporter/releases/download/{{ latest_version.stdout }}/node_exporter-{{ latest_version.stdout | replace('v', '') }}.linux-amd64.tar.gz"
+    dest: /tmp/node_exporter.tar.gz
+
+- name: Extract node_exporter
+  unarchive:
+    src: /tmp/node_exporter.tar.gz
+    dest: /tmp/
+    remote_src: yes
+    creates: /tmp/node_exporter-{{ latest_version.stdout | replace('v', '') }}.linux-amd64
+
+- name: Move binary
+  copy:
+    src: /tmp/node_exporter-{{ latest_version.stdout | replace('v', '') }}.linux-amd64/node_exporter
+    dest: /usr/local/bin/node_exporter
+    mode: '0755'
+    remote_src: yes
+
+- name: Create nodeuser
+  user:
+    name: nodeuser
+    shell: /bin/false
+    create_home: no
+    state: present
+
+- name: Create systemd service
+  template:
+    src: node_exporter.service.j2
+    dest: /etc/systemd/system/node_exporter.service
+  notify: Reload systemd
+
+- name: Set permissions
+  file:
+    path: "{{ item }}"
+    owner: nodeuser
+    group: nodeuser
+    recurse: yes
+  loop:
+    - /etc/node_exporter
+
+- name: Set ownership of binary
+  file:
+    path: /usr/local/bin/node_exporter
+    owner: nodeuser
+    group: nodeuser
+    state: file
+
+- name: Enable and start node_exporter
+  systemd:
+    name: node_exporter
+    enabled: yes
+    state: started
+
+- name: Add job to prometheus.yml
+  lineinfile:
+    path: "{{ prometheus_conf_paths }}"
+    line: "{{ lookup('template', 'prometheus_job.j2') }}"
+  delegate_to: "{{ prometheus_host }}"
+
+- name: Stop Prometheus (docker)
+  docker_container:
+    name: prometheus
+    state: stopped
+  delegate_to: "{{ prometheus_host }}"
+  when: 
+    - setup_prometheus | default(false)
+
+- name: Start Prometheus (docker)
+  docker_container:
+    name: prometheus
+    state: started
+  delegate_to: "{{ prometheus_host }}"
+  when: 
+    - setup_prometheus | default(false)

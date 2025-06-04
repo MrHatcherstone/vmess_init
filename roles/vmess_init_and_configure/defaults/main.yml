@@ -1,0 +1,31 @@
+---
+## VM with vmess
+# ssh port on vm - should be same as ansible_port in your inventory
+ssh_port: 22
+# Ansible user on target vm wich will be created 
+bootstrap_user: "ansible"
+# domain name for vmess
+server_name: "test.equalizerbeavereaglemystic.ru"
+# email for certbot domain certs 
+certbot_email: "ebemlocal@gmail.com"
+# where nginx config for vmwess will be stored 
+nginx_conf_path: "/etc/nginx/sites-enabled/{{ server_name }}.conf"
+# where docker-compose file and config for will be store on your vm
+docker_dir: "/dockerContainers/vmess/conf/"
+# fail2ban ignore list for ssh - could be array with spaces as a separator
+fail2ban_ignoreip: 188.242.54.57 94.19.187.193 94.242.58.184 51.38.138.62 82.115.5.128 51.38.138.61 94.242.58.183 83.228.196.188
+# allowed ip for node exported - only 1 ip
+node_exporter_allowed_src_ip: "188.242.54.57"
+
+## VM/Prometheus host
+# where your store prometheus config on prometheus host
+prometheus_conf_paths: "/dockerContainers/Prometheus/prometheus.yml"
+# prometheus host in ansible inveentory
+prometheus_host: "logger"
+
+## Variables for certain installs
+install_fail2ban: true
+install_nodeexporter: true
+install_ufw: true
+install_docker: true
+setup_prometheus: true

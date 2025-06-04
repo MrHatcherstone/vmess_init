@@ -1,0 +1,116 @@
+---
+- name: Validate server_name
+  ansible.builtin.fail:
+    msg: "The variable 'server_name' must be provided as an argument."
+  when: server_name is not defined
+
+- name: Generate vmess endpoint
+  ansible.builtin.set_fact:
+    endpoint: "{{ lookup('password', '/dev/null length=30 chars=ascii_letters') }}"
+
+- name: Extract subdomain
+  ansible.builtin.set_fact:
+    subdomain: "{{ server_name.split('.')[0] }}"
+
+- name: Generate 3 UUIDs
+  set_fact:
+    guid_1: "{{ lookup('pipe', 'uuidgen') }}"
+    guid_2: "{{ lookup('pipe', 'uuidgen') }}"
+    guid_3: "{{ lookup('pipe', 'uuidgen') }}"
+
+- name: Update APT cache
+  ansible.builtin.apt:
+    update_cache: yes
+
+- name: Install dependencies
+  ansible.builtin.package:
+    name:
+      - nginx
+      - python3-certbot-nginx
+      - certbot
+    state: present
+
+- name: Creates /var/log/nginx/subdomain dir
+  ansible.builtin.file:
+    path: "/var/log/nginx/{{ subdomain }}"
+    state: directory
+
+- name: Creates docker dir
+  ansible.builtin.file:
+    path: "/dockerContainers/vmess/conf"
+    state: directory
+
+- name: Creates Logs dir
+  ansible.builtin.file:
+    path: "/var/log/vmess"
+    state: directory
+
+- name: Remove default nginx conf
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+
+- name: Rewrite base nginx.conf
+  ansible.builtin.template:
+    src: nginx_base.conf.j2
+    dest: "/etc/nginx/nginx.conf"
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Configure temp nginx
+  ansible.builtin.template:
+    src: nginx_temp.conf.j2
+    dest: "{{ nginx_conf_path }}"
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Get cert
+  ansible.builtin.command:
+    cmd: certbot certonly --nginx -d {{ server_name }} --non-interactive --agree-to --email {{ certbot_email }}
+  register: certbot_result
+
+- name: Restart nginx
+  ansible.builtin.service:
+    name: nginx
+    state: restarted
+
+- name: Configure nginx
+  ansible.builtin.template:
+    src: nginx.conf.j2
+    dest: "{{ nginx_conf_path }}"
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Create docker-compose file
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ docker_dir }}/docker-compose.yml"
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Create vmess-conf file
+  ansible.builtin.template:
+    src: base_config.json.j2
+    dest: "{{ docker_dir }}/base_config.json"
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: docker compose up
+  ansible.builtin.command:
+    cmd: docker compose up -d
+    chdir: "{{ docker_dir }}"
+
+- name: Restart nginx
+  ansible.builtin.service:
+    name: nginx
+    state: restarted
+
+- name: docker compose restart
+  ansible.builtin.command:
+    cmd: docker compose restart
+    chdir: "{{ docker_dir }}"

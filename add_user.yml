@@ -1,0 +1,6 @@
+---
+- name: Add user
+  hosts: all
+  become: true
+  roles:
+    - add_user

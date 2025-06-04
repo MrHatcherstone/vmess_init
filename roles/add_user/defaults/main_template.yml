@@ -1,0 +1,6 @@
+# path to vmess config file
+vmess_config_file_path: "/dockerContainers/vmess/conf/base_config.json"
+# path to docker-compose dir
+docker_compose_dir: "/dockerContainers/vmess/conf"
+# name for user
+email: "new-client"

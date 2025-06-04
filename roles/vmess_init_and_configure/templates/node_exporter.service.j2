@@ -1,0 +1,14 @@
+[Unit]
+Description=Node Exporter Service
+After=network.target
+
+[Service]
+User=nodeuser
+Group=nodeuser
+Type=simple
+ExecStart=/usr/local/bin/node_exporter --web.listen-address=127.0.0.1:9100
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,22 @@
+---
+- name: Add SSH-key to ansible host known_hosts
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Add SSH-key to ansible host known_hosts
+      shell: "ssh-keyscan -T 10 -H {{ ansible_host }} >> /home/ansible/.ssh/known_hosts"
+      delegate_to: localhost
+
+- name: Bootstrap user add for Ansible on target VM
+  hosts: all
+  become: true
+  remote_user: root
+  roles:
+    - create_bootstrap_user
+
+- name: Init VMESS on targer VM
+  hosts: all
+  become: true
+  remote_user: "{{ bootstrap_user }}"
+  roles:
+    - vmess_init_and_configure

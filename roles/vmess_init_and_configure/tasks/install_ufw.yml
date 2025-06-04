@@ -1,0 +1,87 @@
+---
+- name: Ensure UFW is installed
+  apt:
+    name: ufw
+    state: present
+    update_cache: yes
+
+- name: Reset UFW to default settings
+  shell: echo "y" | ufw reset
+  ignore_errors: yes
+
+- name: Allow incoming SSH (TCP {{ ssh_port }} for all)
+  ufw:
+    rule: allow
+    proto: tcp
+    port: "{{ ssh_port }}"
+    direction: in
+
+- name: Allow incoming HTTP (TCP 80 for all)
+  ufw:
+    rule: allow
+    proto: tcp
+    port: "80"
+    direction: in
+
+- name: Allow incoming HTTPS (TCP 443 for all)
+  ufw:
+    rule: allow
+    proto: tcp
+    port: "443"
+    direction: in
+
+- name: Allow incoming Custom Port (TCP 9100 from specific IP)
+  ufw:
+    rule: allow
+    proto: tcp
+    port: "9100"
+    src: "{{ node_exporter_allowed_src_ip }}"
+    direction: in
+  when:
+    - node_exporter_allowed_src_ip is defined
+    - node_exporter_allowed_src_ip | length > 0
+
+- name: Allow all outgoing TCP traffic
+  ufw:
+    rule: allow
+    proto: tcp
+    direction: out
+
+- name: Allow all outgoing UDP traffic
+  ufw:
+    rule: allow
+    proto: udp
+    direction: out
+
+- name: Allow outgoing DNS (TCP 53)
+  ufw:
+    rule: allow
+    proto: tcp
+    port: "53"
+    direction: out
+
+- name: Allow outgoing DNS (UDP 53)
+  ufw:
+    rule: allow
+    proto: udp
+    port: "53"
+    direction: out
+
+- name: Allow outgoing HTTP (TCP 80)
+  ufw:
+    rule: allow
+    proto: tcp
+    port: "80"
+    direction: out
+
+- name: Allow outgoing HTTPS (TCP 443)
+  ufw:
+    rule: allow
+    proto: tcp
+    port: "443"
+    direction: out
+
+- name: Enable UFW
+  ufw:
+    state: enabled
+    policy: deny

@@ -1,0 +1,19 @@
+---
+- import_tasks: install_fail2ban.yml
+  when: 
+    - install_fail2ban | default(false)
+
+- import_tasks: install_nodeexporter.yml
+  when: 
+    - install_nodeexporter | default(false)
+
+- import_tasks: install_ufw.yml
+  when: 
+    - install_ufw | default(false)
+
+- import_tasks: install_docker.yml
+  when: 
+    - install_docker | default(false)
+
+- import_tasks: install_base_vmess.yml
+  when: server_name is defined and server_name | length > 0

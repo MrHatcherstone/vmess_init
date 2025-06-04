@@ -1,0 +1,6 @@
+---
+- name: Create user config
+  hosts: all
+  become: true
+  roles:
+    - generate_config

@@ -1,0 +1,26 @@
+---
+- name: Create user
+  user:
+    name: "{{ bootstrap_user }}"
+    shell: /bin/bash
+    groups: sudo
+    append: yes
+    create_home: yes
+    state: present
+    password: "{{ bootstrap_user_password }}"
+
+- name: Set SSH key for user
+  authorized_key:
+    user: "{{ bootstrap_user }}"
+    state: present
+    key: "{{ bootstrap_pubkey }}"
+
+- name: Allow passwordless sudo
+  copy:
+    dest: "/etc/sudoers.d/{{ bootstrap_user }}"
+    content: "{{ bootstrap_user }} ALL=(ALL) NOPASSWD:ALL\n"
+    mode: '0440'
+
+- name: Set hostname on {{ ansible_hostname }}
+  hostname:
+    name: "{{ inventory_hostname }}"

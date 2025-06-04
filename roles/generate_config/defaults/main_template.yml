@@ -1,0 +1,16 @@
+# path to vmess config file
+vmess_config_file_path: "/dockerContainers/vmess/conf/base_config.json"
+# name for user
+email: "new-client"
+# domain name for vmess
+domain: "example.com"
+
+## password push
+# if you have password push and want to publish config and resicve a link
+pwd_push: true
+# url fot pwdpush
+pwpush_url: "https://pwpush.com/"
+# user/admin email for auth
+pwpush_email: "email.example.com"
+# token for api auth
+pwpush_api_token: "SomeRandomToken"
